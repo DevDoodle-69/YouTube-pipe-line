@@ -58,9 +58,17 @@ app.get('/stream', async (req, res) => {
         res.setHeader('Content-Type', 'video/mp4');
         res.setHeader('Content-Disposition', `inline; filename="${title}.mp4"`);
 
-        ytdl(videoURL, { agent, playerClients, quality: 'highest', filter: 'audioandvideo' }).pipe(res);
+        const stream = ytdl(videoURL, { agent, playerClients, quality: 'highest', filter: 'audioandvideo' });
+        stream.on('error', (err) => {
+            if (!res.headersSent) {
+                res.status(500).json({ success: false, error: err.message });
+            }
+        });
+        stream.pipe(res);
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, error: err.message });
+        }
     }
 });
 
@@ -75,14 +83,21 @@ app.get('/', (req, res) => {
             <br><br>
             <button onclick="streamVideo()" style="padding:10px 20px;">Play / Stream</button>
             <br><br>
+            <p id="status" style="color:red;"></p>
             <video id="player" controls width="640" style="max-width:100%;"></video>
             <script>
-                function streamVideo() {
+                async function streamVideo() {
                     const u = document.getElementById('url').value;
+                    const status = document.getElementById('status');
+                    status.innerText = '';
                     if(!u) return alert('Enter URL');
                     const player = document.getElementById('player');
                     player.src = '/stream?url=' + encodeURIComponent(u);
-                    player.play();
+                    try {
+                        await player.play();
+                    } catch (e) {
+                        status.innerText = 'Stream loading or format blocked by YouTube.';
+                    }
                 }
             </script>
         </body>
