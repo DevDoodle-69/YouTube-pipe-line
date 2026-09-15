@@ -45,11 +45,9 @@ app.get('/search', async (req, res) => {
     }
 });
 
-app.get('/download', async (req, res) => {
+app.get('/stream', async (req, res) => {
     try {
         const videoURL = req.query.url;
-        const type = (req.query.type || 'mp3').toLowerCase();
-
         if (!videoURL || !ytdl.validateURL(videoURL)) {
             return res.status(400).json({ success: false, error: 'Valid YouTube URL is required' });
         }
@@ -57,24 +55,39 @@ app.get('/download', async (req, res) => {
         const info = await ytdl.getInfo(videoURL, { agent });
         const title = info.videoDetails.title.replace(/[^\w\s]/gi, '').trim();
 
-        if (type === 'mp3') {
-            res.header('Content-Disposition', `attachment; filename="${title}.mp3"`);
-            res.setHeader('Content-Type', 'audio/mpeg');
-            ytdl(videoURL, { agent, quality: 'highestaudio', filter: 'audioonly' }).pipe(res);
-        } else if (type === 'mp4') {
-            res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
-            res.setHeader('Content-Type', 'video/mp4');
-            ytdl(videoURL, { agent, quality: 'highest', filter: 'videoandaudio' }).pipe(res);
-        } else {
-            res.status(400).json({ success: false, error: 'Invalid type parameter' });
-        }
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Content-Disposition', `inline; filename="${title}.mp4"`);
+
+        ytdl(videoURL, { agent, quality: 'highest', filter: 'videoandaudio' }).pipe(res);
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
 app.get('/', (req, res) => {
-    res.send('API running');
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Stream Player</title></head>
+        <body style="font-family:sans-serif; text-align:center; padding:50px;">
+            <h2>YouTube Browser Streamer</h2>
+            <input type="text" id="url" placeholder="Paste YouTube URL here" style="width:400px; padding:10px;" />
+            <br><br>
+            <button onclick="streamVideo()" style="padding:10px 20px;">Play / Stream</button>
+            <br><br>
+            <video id="player" controls width="640" style="max-width:100%;"></video>
+            <script>
+                function streamVideo() {
+                    const u = document.getElementById('url').value;
+                    if(!u) return alert('Enter URL');
+                    const player = document.getElementById('player');
+                    player.src = '/stream?url=' + encodeURIComponent(u);
+                    player.play();
+                }
+            </script>
+        </body>
+        </html>
+    `);
 });
 
 app.listen(PORT, () => {
