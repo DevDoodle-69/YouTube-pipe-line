@@ -26,6 +26,7 @@ const COOKIES_ARRAY = [
 ];
 
 const agent = ytdl.createAgent(COOKIES_ARRAY);
+const playerClients = ["ANDROID", "WEB", "IOS", "TV"];
 
 app.get('/search', async (req, res) => {
     try {
@@ -33,7 +34,6 @@ app.get('/search', async (req, res) => {
         if (!query) {
             return res.status(400).json({ success: false, error: 'Missing yt query parameter' });
         }
-
         const searchResult = await ytSearch(query);
         res.json({
             success: true,
@@ -52,13 +52,13 @@ app.get('/stream', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Valid YouTube URL is required' });
         }
 
-        const info = await ytdl.getInfo(videoURL, { agent });
+        const info = await ytdl.getInfo(videoURL, { agent, playerClients });
         const title = info.videoDetails.title.replace(/[^\w\s]/gi, '').trim();
 
         res.setHeader('Content-Type', 'video/mp4');
         res.setHeader('Content-Disposition', `inline; filename="${title}.mp4"`);
 
-        ytdl(videoURL, { agent, quality: 'highest', filter: 'videoandaudio' }).pipe(res);
+        ytdl(videoURL, { agent, playerClients, quality: 'highest', filter: 'audioandvideo' }).pipe(res);
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
