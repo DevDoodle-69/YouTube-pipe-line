@@ -5,34 +5,33 @@ const ytSearch = require('yt-search');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const YOUTUBE_COOKIE = 'GPS=1; PREF=f6=40000000&tz=Asia.Dhaka; __Secure-1PSIDTS=sidts-CjUBXMw41VSfJMUQeEbTw9Q7W8HGmqx3BQS98i6GDNvTgpkpQroBvUpZih2siMV_BoY8dPjUhxAA; __Secure-3PSIDTS=sidts-CjUBXMw41VSfJMUQeEbTw9Q7W8HGmqx3BQS98i6GDNvTgpkpQroBvUpZih2siMV_BoY8dPjUhxAA; HSID=AqDIpHgd7rS_H6Hei; SSID=AMDL1wVHmXEt2r2Xv; APISID=tMG0pSWEVdF1F-vA/AD6FDLIcE9TXv4pjm; SAPISID=dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM; __Secure-1PAPISID=dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM; __Secure-3PAPISID=dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM; SID=g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMpFiETDU-2IkhNyvpf-Rh-AACgYKAUUSARYSFQHGX2MiYkOU0SjVM5VGu_SXJy1pJBoVAUF8yKrEjrB8LP-NtfvJFRt4Ih7l0076; __Secure-1PSID=g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMhrUVDM9DX1JR6BTT0g0SxAACgYKAZgSARYSFQHGX2MiDok0Mmr6ft4KE_H1REq66xoVAUF8yKr3vahEl5Ve_am_KLtLONeJ0076; __Secure-3PSID=g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMoMvSEHCCcpmUDmICiPHtBwACgYKASISARYSFQHGX2MiPgmYvMvo1nInvpmYiGYodxoVAUF8yKqupTVidfdWxlbTarO55dVo0076; LOGIN_INFO=AFmmF2swRgIhALSbqxeQm75kvshfUjXOm7h-1_Qhdxx9D1hjGhNRfpc3AiEAxs4MdCRBxZ7CE-rbPBTUQwW4N7hX6BnQAj--Jo6Hir4:QUQ3MjNmdzV3THk3SmVfR04zLVkyT2hrMEZRekMtZlprclA4X1pfUWE4WW9zQWlZa2dkOFdoUnQyYUdEOUs3QkpsdHdMMzNhQktOM0M3UkRkM0kwLVlVYkM3S0F0dGJab0hieFlDTVoyNzBZcnlIVmpqOWw1SUJGaVl0UWFBcnBERHR5YVpxX1hWYktvdUhiMHBDS3VIRXZkV1U3cGU0LUR3; SIDCC=AKEyXzW7xXxjY5ytwUIYytS6LTmAooMlDF96A1mdd9nWg3NkHs5XJhKKjkBQZnYnxHIwwq_d; __Secure-1PSIDCC=AKEyXzX669D02up9n8pOJJ5uuAD85xjK58-1T2zV37WoQRx2CZwNjTc8L0aZPwhOKoBIQCTs; __Secure-3PSIDCC=AKEyXzVDDyIuvpElX_UnRwSGOPFmrTfc6YTNO1oXc4dfrxtocUUSCXdM6ipfpom1GC9i_pgJ';
+const COOKIES_ARRAY = [
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1789502170, name: "GPS", value: "1" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060473, name: "PREF", value: "f6=40000000&tz=Asia.Dhaka" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036424, name: "__Secure-1PSIDTS", value: "sidts-CjUBXMw41VSfJMUQeEbTw9Q7W8HGmqx3BQS98i6GDNvTgpkpQroBvUpZih2siMV_BoY8dPjUhxAA" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036424, name: "__Secure-3PSIDTS", value: "sidts-CjUBXMw41VSfJMUQeEbTw9Q7W8HGmqx3BQS98i6GDNvTgpkpQroBvUpZih2siMV_BoY8dPjUhxAA" },
+    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1824060424, name: "HSID", value: "AqDIpHgd7rS_H6Hei" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "SSID", value: "AMDL1wVHmXEt2r2Xv" },
+    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1824060424, name: "APISID", value: "tMG0pSWEVdF1F-vA/AD6FDLIcE9TXv4pjm" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "SAPISID", value: "dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-1PAPISID", value: "dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-3PAPISID", value: "dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM" },
+    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1824060424, name: "SID", value: "g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMpFiETDU-2IkhNyvpf-Rh-AACgYKAUUSARYSFQHGX2MiYkOU0SjVM5VGu_SXJy1pJBoVAUF8yKrEjrB8LP-NtfvJFRt4Ih7l0076" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-1PSID", value: "g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMhrUVDM9DX1JR6BTT0g0SxAACgYKAZgSARYSFQHGX2MiDok0Mmr6ft4KE_H1REq66xoVAUF8yKr3vahEl5Ve_am_KLtLONeJ0076" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-3PSID", value: "g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMoMvSEHCCcpmUDmICiPHtBwACgYKASISARYSFQHGX2MiPgmYvMvo1nInvpmYiGYodxoVAUF8yKqupTVidfdWxlbTarO55dVo0076" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060425, name: "LOGIN_INFO", value: "AFmmF2swRgIhALSbqxeQm75kvshfUjXOm7h-1_Qhdxx9D1hjGhNRfpc3AiEAxs4MdCRBxZ7CE-rbPBTUQwW4N7hX6BnQAj--Jo6Hir4:QUQ3MjNmdzV3THk3SmVfR04zLVkyT2hrMEZRekMtZlprclA4X1pfUWE4WW9zQWlZa2dkOFdoUnQyYUdEOUs3QkpsdHdMMzNhQktOM0M3UkRkM0kwLVlVYkM3S0F0dGJab0hieFlDTVoyNzBZcnlIVmpqOWw1SUJGaVl0UWFBcnBERHR5YVpxX1hWYktvdUhiMHBDS3VIRXZkV1U3cGU0LUR3" },
+    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1821036475, name: "SIDCC", value: "AKEyXzW7xXxjY5ytwUIYytS6LTmAooMlDF96A1mdd9nWg3NkHs5XJhKKjkBQZnYnxHIwwq_d" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036475, name: "__Secure-1PSIDCC", value: "AKEyXzX669D02up9n8pOJJ5uuAD85xjK58-1T2zV37WoQRx2CZwNjTc8L0aZPwhOKoBIQCTs" },
+    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036475, name: "__Secure-3PSIDCC", value: "AKEyXzVDDyIuvpElX_UnRwSGOPFmrTfc6YTNO1oXc4dfrxtocUUSCXdM6ipfpom1GC9i_pgJ" }
+];
 
-const getYtdlOptions = (type) => {
-    const options = {
-        requestOptions: {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Cookie': YOUTUBE_COOKIE
-            }
-        }
-    };
-
-    if (type === 'mp3') {
-        options.quality = 'highestaudio';
-        options.filter = 'audioonly';
-    } else {
-        options.quality = 'highest';
-        options.filter = 'videoandaudio';
-    }
-
-    return options;
-};
+const agent = ytdl.createAgent(COOKIES_ARRAY);
 
 app.get('/search', async (req, res) => {
     try {
         const query = req.query.yt;
         if (!query) {
-            return res.status(400).json({ success: false, error: 'Missing yt query parameter. Use /search?yt=your_query' });
+            return res.status(400).json({ success: false, error: 'Missing yt query parameter' });
         }
 
         const searchResult = await ytSearch(query);
@@ -51,30 +50,23 @@ app.get('/download', async (req, res) => {
         const videoURL = req.query.url;
         const type = (req.query.type || 'mp3').toLowerCase();
 
-        if (!videoURL) {
-            return res.status(400).json({ success: false, error: 'Valid YouTube URL is required via ?url=' });
+        if (!videoURL || !ytdl.validateURL(videoURL)) {
+            return res.status(400).json({ success: false, error: 'Valid YouTube URL is required' });
         }
 
-        const info = await ytdl.getInfo(videoURL, {
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Cookie': YOUTUBE_COOKIE
-                }
-            }
-        });
+        const info = await ytdl.getInfo(videoURL, { agent });
         const title = info.videoDetails.title.replace(/[^\w\s]/gi, '').trim();
 
         if (type === 'mp3') {
             res.header('Content-Disposition', `attachment; filename="${title}.mp3"`);
             res.setHeader('Content-Type', 'audio/mpeg');
-            ytdl(videoURL, getYtdlOptions('mp3')).pipe(res);
+            ytdl(videoURL, { agent, quality: 'highestaudio', filter: 'audioonly' }).pipe(res);
         } else if (type === 'mp4') {
             res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
             res.setHeader('Content-Type', 'video/mp4');
-            ytdl(videoURL, getYtdlOptions('mp4')).pipe(res);
+            ytdl(videoURL, { agent, quality: 'highest', filter: 'videoandaudio' }).pipe(res);
         } else {
-            res.status(400).json({ success: false, error: 'Invalid type parameter. Use type=mp3 or type=mp4.' });
+            res.status(400).json({ success: false, error: 'Invalid type parameter' });
         }
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -82,7 +74,7 @@ app.get('/download', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('YouTube Downloader API is running successfully!');
+    res.send('API running');
 });
 
 app.listen(PORT, () => {
