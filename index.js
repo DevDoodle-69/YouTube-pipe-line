@@ -26,7 +26,9 @@ const COOKIES_ARRAY = [
     { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036475, name: "__Secure-3PSIDCC", value: "AKEyXzVDDyIuvpElX_UnRwSGOPFmrTfc6YTNO1oXc4dfrxtocUUSCXdM6ipfpom1GC9i_pgJ" }
 ];
 
-const agent = ytdl.createAgent(COOKIES_ARRAY);
+const agent = process.env.PROXY_URL 
+    ? ytdl.createProxyAgent({ uri: process.env.PROXY_URL }, COOKIES_ARRAY) 
+    : ytdl.createAgent(COOKIES_ARRAY);
 
 app.get('/search', async (req, res) => {
     try {
