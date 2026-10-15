@@ -1,16 +1,17 @@
 {
-  "name": "search-api",
+  "name": "omni-search-api",
   "version": "1.0.0",
-  "description": "youtube + spotify search api",
+  "description": "Limitless YouTube and Spotify search aggregation endpoint.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
-    "axios": "^1.7.7",
-    "express": "^4.21.0"
-  }
+    "express": "^4.18.2",
+    "yt-search": "^2.10.4"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "private": true
 }
