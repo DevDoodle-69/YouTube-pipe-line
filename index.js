@@ -1,114 +1,365 @@
 const express = require('express');
-const ytdl = require('@distube/ytdl-core');
-const ytSearch = require('yt-search');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 10000;
-const playerClients = ["WEB", "ANDROID", "IOS"];
+const PORT = process.env.PORT || 3000;
 
-const COOKIES_ARRAY = [
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1789502170, name: "GPS", value: "1" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060473, name: "PREF", value: "f6=40000000&tz=Asia.Dhaka" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036424, name: "__Secure-1PSIDTS", value: "sidts-CjUBXMw41VSfJMUQeEbTw9Q7W8HGmqx3BQS98i6GDNvTgpkpQroBvUpZih2siMV_BoY8dPjUhxAA" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036424, name: "__Secure-3PSIDTS", value: "sidts-CjUBXMw41VSfJMUQeEbTw9Q7W8HGmqx3BQS98i6GDNvTgpkpQroBvUpZih2siMV_BoY8dPjUhxAA" },
-    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1824060424, name: "HSID", value: "AqDIpHgd7rS_H6Hei" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "SSID", value: "AMDL1wVHmXEt2r2Xv" },
-    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1824060424, name: "APISID", value: "tMG0pSWEVdF1F-vA/AD6FDLIcE9TXv4pjm" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "SAPISID", value: "dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-1PAPISID", value: "dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-3PAPISID", value: "dMKm0aE_0iOrnbCX/AE-7ZFojnihs1uzYM" },
-    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1824060424, name: "SID", value: "g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMpFiETDU-2IkhNyvpf-Rh-AACgYKAUUSARYSFQHGX2MiYkOU0SjVM5VGu_SXJy1pJBoVAUF8yKrEjrB8LP-NtfvJFRt4Ih7l0076" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-1PSID", value: "g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMhrUVDM9DX1JR6BTT0g0SxAACgYKAZgSARYSFQHGX2MiDok0Mmr6ft4KE_H1REq66xoVAUF8yKr3vahEl5Ve_am_KLtLONeJ0076" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060424, name: "__Secure-3PSID", value: "g.a000CgmoihWi0NUE2rIXztcGtHQZyjz7VqYf-MStP_aqOmAD6wjMoMvSEHCCcpmUDmICiPHtBwACgYKASISARYSFQHGX2MiPgmYvMvo1nInvpmYiGYodxoVAUF8yKqupTVidfdWxlbTarO55dVo0076" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1824060425, name: "LOGIN_INFO", value: "AFmmF2swRgIhALSbqxeQm75kvshfUjXOm7h-1_Qhdxx9D1hjGhNRfpc3AiEAxs4MdCRBxZ7CE-rbPBTUQwW4N7hX6BnQAj--Jo6Hir4:QUQ3MjNmdzV3THk3SmVfR04zLVkyT2hrMEZRekMtZlprclA4X1pfUWE4WW9zQWlZa2dkOFdoUnQyYUdEOUs3QkpsdHdMMzNhQktOM0M3UkRkM0kwLVlVYkM3S0F0dGJab0hieFlDTVoyNzBZcnlIVmpqOWw1SUJGaVl0UWFBcnBERHR5YVpxX1hWYktvdUhiMHBDS3VIRXZkV1U3cGU0LUR3" },
-    { domain: ".youtube.com", path: "/", secure: false, expirationDate: 1821036475, name: "SIDCC", value: "AKEyXzW7xXxjY5ytwUIYytS6LTmAooMlDF96A1mdd9nWg3NkHs5XJhKKjkBQZnYnxHIwwq_d" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036475, name: "__Secure-1PSIDCC", value: "AKEyXzX669D02up9n8pOJJ5uuAD85xjK58-1T2zV37WoQRx2CZwNjTc8L0aZPwhOKoBIQCTs" },
-    { domain: ".youtube.com", path: "/", secure: true, expirationDate: 1821036475, name: "__Secure-3PSIDCC", value: "AKEyXzVDDyIuvpElX_UnRwSGOPFmrTfc6YTNO1oXc4dfrxtocUUSCXdM6ipfpom1GC9i_pgJ" }
-];
+const YT_KEY = process.env.YT_API_KEY || 'AIzaSyC-SVwqFX7N-Wg5YfjEEYxlaBIC4u1JxCg';
+const YT_BASE = 'https://www.googleapis.com/youtube/v3';
 
-const agent = process.env.PROXY_URL 
-    ? ytdl.createProxyAgent({ uri: process.env.PROXY_URL }, COOKIES_ARRAY) 
-    : ytdl.createAgent(COOKIES_ARRAY);
+const SPOTIFY_TOKEN_URL = 'https://open.spotify.com/get_access_token?reason=transport&productType=web_player';
+const SPOTIFY_API = 'https://api.spotify.com/v1';
+const SPOTIFY_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+let spotifyToken = null;
+let spotifyTokenExpiresAt = 0;
+let spotifyTokenPromise = null;
+
+async function getSpotifyToken() {
+  if (spotifyToken && Date.now() < spotifyTokenExpiresAt - 60000) {
+    return spotifyToken;
+  }
+
+  if (spotifyTokenPromise) return spotifyTokenPromise;
+
+  spotifyTokenPromise = (async () => {
+    try {
+      const res = await axios.get(SPOTIFY_TOKEN_URL, {
+        headers: {
+          'User-Agent': SPOTIFY_UA,
+          'Accept': 'application/json',
+          'Referer': 'https://open.spotify.com/',
+          'Origin': 'https://open.spotify.com'
+        },
+        timeout: 15000
+      });
+
+      const token = res.data && res.data.accessToken;
+      const expMs = res.data && res.data.accessTokenExpirationTimestampMs;
+
+      if (!token) throw new Error('no access token in response');
+
+      spotifyToken = token;
+      spotifyTokenExpiresAt = expMs ? expMs : Date.now() + 30 * 60 * 1000;
+
+      console.log(`spotify token refreshed (expires in ${Math.round((spotifyTokenExpiresAt - Date.now()) / 60000)}m)`);
+      return token;
+    } catch (err) {
+      console.log(`spotify token fetch failed: ${err.message}`);
+      throw err;
+    } finally {
+      spotifyTokenPromise = null;
+    }
+  })();
+
+  return spotifyTokenPromise;
+}
+
+function ytDurationToMs(iso) {
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || '');
+  if (!m) return 0;
+  const h = parseInt(m[1] || 0, 10);
+  const mi = parseInt(m[2] || 0, 10);
+  const s = parseInt(m[3] || 0, 10);
+  return ((h * 60 + mi) * 60 + s) * 1000;
+}
+
+function ytFormatDuration(iso) {
+  const total = Math.floor(ytDurationToMs(iso) / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+async function ytSearch(query, limit = 10) {
+  const res = await axios.get(`${YT_BASE}/search`, {
+    params: {
+      part: 'snippet',
+      q: query,
+      type: 'video',
+      maxResults: Math.min(50, limit),
+      key: YT_KEY
+    },
+    timeout: 15000
+  });
+
+  const items = (res.data.items || []).map(v => ({
+    videoId: v.id.videoId,
+    title: v.snippet.title,
+    description: v.snippet.description,
+    channelId: v.snippet.channelId,
+    channelTitle: v.snippet.channelTitle,
+    publishedAt: v.snippet.publishedAt,
+    thumbnail: {
+      default: v.snippet.thumbnails && v.snippet.thumbnails.default && v.snippet.thumbnails.default.url,
+      medium: v.snippet.thumbnails && v.snippet.thumbnails.medium && v.snippet.thumbnails.medium.url,
+      high: v.snippet.thumbnails && v.snippet.thumbnails.high && v.snippet.thumbnails.high.url,
+      standard: v.snippet.thumbnails && v.snippet.thumbnails.standard && v.snippet.thumbnails.standard.url,
+      maxres: v.snippet.thumbnails && v.snippet.thumbnails.maxres && v.snippet.thumbnails.maxres.url
+    },
+    url: `https://www.youtube.com/watch?v=${v.id.videoId}`,
+    shortUrl: `https://youtu.be/${v.id.videoId}`
+  }));
+
+  if (!items.length) return { items, total: 0 };
+
+  const ids = items.map(i => i.videoId).join(',');
+  try {
+    const details = await axios.get(`${YT_BASE}/videos`, {
+      params: {
+        part: 'contentDetails,statistics,status',
+        id: ids,
+        key: YT_KEY
+      },
+      timeout: 15000
+    });
+
+    const map = new Map();
+    for (const d of details.data.items || []) {
+      map.set(d.id, {
+        durationIso: d.contentDetails && d.contentDetails.duration,
+        duration: ytFormatDuration(d.contentDetails && d.contentDetails.duration),
+        durationMs: ytDurationToMs(d.contentDetails && d.contentDetails.duration),
+        views: d.statistics && parseInt(d.statistics.viewCount || '0', 10),
+        likes: d.statistics && parseInt(d.statistics.likeCount || '0', 10),
+        comments: d.statistics && parseInt(d.statistics.commentCount || '0', 10),
+        isLive: d.snippet && d.snippet.liveBroadcastContent === 'live'
+      });
+    }
+
+    for (const i of items) {
+      const extra = map.get(i.videoId);
+      if (extra) Object.assign(i, extra);
+    }
+  } catch (e) {
+    console.log(`yt details enrich failed: ${e.message}`);
+  }
+
+  return { items, total: items.length };
+}
+
+async function spoSearch(query, limit = 10, type = 'track') {
+  const token = await getSpotifyToken();
+
+  const res = await axios.get(`${SPOTIFY_API}/search`, {
+    params: {
+      q: query,
+      type,
+      limit: Math.min(50, limit),
+      market: 'US'
+    },
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'User-Agent': SPOTIFY_UA,
+      'Accept': 'application/json'
+    },
+    timeout: 15000
+  });
+
+  return res.data;
+}
+
+function normalizeTracks(data) {
+  const tracks = data && data.tracks && data.tracks.items ? data.tracks.items : [];
+  return tracks.filter(Boolean).map(t => ({
+    id: t.id,
+    name: t.name,
+    uri: t.uri,
+    url: t.external_urls ? t.external_urls.spotify : null,
+    durationMs: t.duration_ms,
+    duration: msToTime(t.duration_ms),
+    explicit: t.explicit,
+    popularity: t.popularity,
+    previewUrl: t.preview_url,
+    artists: (t.artists || []).map(a => ({
+      id: a.id,
+      name: a.name,
+      url: a.external_urls ? a.external_urls.spotify : null
+    })),
+    album: t.album ? {
+      id: t.album.id,
+      name: t.album.name,
+      url: t.album.external_urls ? t.album.external_urls.spotify : null,
+      releaseDate: t.album.release_date,
+      totalTracks: t.album.total_tracks,
+      images: (t.album.images || []).map(i => ({ url: i.url, width: i.width, height: i.height }))
+    } : null,
+    thumbnail: t.album && t.album.images && t.album.images[0] ? t.album.images[0].url : null
+  }));
+}
+
+function normalizeAlbums(data) {
+  const albums = data && data.albums && data.albums.items ? data.albums.items : [];
+  return albums.filter(Boolean).map(a => ({
+    id: a.id,
+    name: a.name,
+    uri: a.uri,
+    url: a.external_urls ? a.external_urls.spotify : null,
+    type: a.album_type,
+    releaseDate: a.release_date,
+    totalTracks: a.total_tracks,
+    artists: (a.artists || []).map(x => ({ id: x.id, name: x.name })),
+    images: (a.images || []).map(i => ({ url: i.url, width: i.width, height: i.height })),
+    thumbnail: a.images && a.images[0] ? a.images[0].url : null
+  }));
+}
+
+function normalizeArtists(data) {
+  const artists = data && data.artists && data.artists.items ? data.artists.items : [];
+  return artists.filter(Boolean).map(a => ({
+    id: a.id,
+    name: a.name,
+    uri: a.uri,
+    url: a.external_urls ? a.external_urls.spotify : null,
+    followers: a.followers ? a.followers.total : null,
+    popularity: a.popularity,
+    genres: a.genres || [],
+    images: (a.images || []).map(i => ({ url: i.url, width: i.width, height: i.height })),
+    thumbnail: a.images && a.images[0] ? a.images[0].url : null
+  }));
+}
+
+function normalizePlaylists(data) {
+  const playlists = data && data.playlists && data.playlists.items ? data.playlists.items : [];
+  return playlists.filter(Boolean).map(p => ({
+    id: p.id,
+    name: p.name,
+    uri: p.uri,
+    url: p.external_urls ? p.external_urls.spotify : null,
+    description: p.description,
+    owner: p.owner ? { id: p.owner.id, name: p.owner.display_name } : null,
+    tracks: p.tracks ? p.tracks.total : null,
+    images: (p.images || []).map(i => ({ url: i.url, width: i.width, height: i.height })),
+    thumbnail: p.images && p.images[0] ? p.images[0].url : null
+  }));
+}
+
+function msToTime(ms) {
+  const total = Math.floor((ms || 0) / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 app.get('/search', async (req, res) => {
+  const yt = req.query.yt;
+  const spo = req.query.spo;
+  const limit = Math.min(50, parseInt(req.query.limit || '10', 10) || 10);
+  const type = (req.query.type || 'track').toLowerCase();
+
+  if (!yt && !spo) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'missing ?yt= or ?spo=',
+      usage: {
+        youtube: '/search?yt=never gonna give you up',
+        spotify: '/search?spo=never gonna give you up',
+        spotify_types: 'track | album | artist | playlist (add &type=album)'
+      }
+    });
+  }
+
+  if (yt) {
     try {
-        const query = req.query.yt;
-        if (!query) {
-            return res.status(400).json({ success: false, error: 'Missing yt query parameter' });
-        }
-        const searchResult = await ytSearch(query);
-        res.json({
-            success: true,
-            query: query,
-            results: searchResult.videos.slice(0, 15)
+      const data = await ytSearch(yt, limit);
+      return res.json({
+        status: 'success',
+        source: 'youtube',
+        query: yt,
+        total: data.total,
+        results: data.items
+      });
+    } catch (err) {
+      console.log(`yt search failed: ${err.message}`);
+      const detail = err.response && err.response.data ? err.response.data : null;
+      return res.status(500).json({
+        status: 'error',
+        source: 'youtube',
+        message: err.message,
+        detail
+      });
+    }
+  }
+
+  try {
+    const raw = await spoSearch(spo, limit, type);
+
+    let results;
+    let kind;
+
+    switch (type) {
+      case 'album':
+        results = normalizeAlbums(raw);
+        kind = 'albums';
+        break;
+      case 'artist':
+        results = normalizeArtists(raw);
+        kind = 'artists';
+        break;
+      case 'playlist':
+        results = normalizePlaylists(raw);
+        kind = 'playlists';
+        break;
+      default:
+        results = normalizeTracks(raw);
+        kind = 'tracks';
+    }
+
+    return res.json({
+      status: 'success',
+      source: 'spotify',
+      query: spo,
+      type: kind,
+      total: results.length,
+      results
+    });
+  } catch (err) {
+    console.log(`spo search failed: ${err.message}`);
+
+    if (err.response && err.response.status === 401) {
+      spotifyToken = null;
+      spotifyTokenExpiresAt = 0;
+      try {
+        const raw = await spoSearch(spo, limit, type);
+        const results = type === 'album' ? normalizeAlbums(raw)
+          : type === 'artist' ? normalizeArtists(raw)
+          : type === 'playlist' ? normalizePlaylists(raw)
+          : normalizeTracks(raw);
+        return res.json({
+          status: 'success',
+          source: 'spotify',
+          query: spo,
+          type,
+          total: results.length,
+          results
         });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+      } catch (e2) {
+        return res.status(500).json({ status: 'error', source: 'spotify', message: e2.message });
+      }
     }
-});
 
-app.get('/stream', async (req, res) => {
-    try {
-        const videoURL = req.query.url;
-        if (!videoURL || !ytdl.validateURL(videoURL)) {
-            return res.status(400).send('Invalid or missing YouTube URL');
-        }
-
-        const info = await ytdl.getInfo(videoURL, { agent, playerClients });
-        const format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' });
-
-        if (!format || !format.url) {
-            return res.status(400).send('Error: YouTube stream format unavailable.');
-        }
-
-        res.redirect(format.url);
-    } catch (err) {
-        res.status(500).send('Streaming error: ' + err.message);
-    }
+    return res.status(500).json({
+      status: 'error',
+      source: 'spotify',
+      message: err.message,
+      detail: err.response && err.response.data ? err.response.data : null
+    });
+  }
 });
 
 app.get('/', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>YouTube Direct Streamer</title>
-            <style>
-                body { font-family: Arial, sans-serif; background: #0f0f0f; color: #fff; text-align: center; padding: 40px; }
-                input { width: 500px; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #333; background: #222; color: #fff; }
-                button { padding: 12px 24px; font-size: 16px; background: #cc0000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-                button:hover { background: #e60000; }
-                video { margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-                #error { color: #ff4444; margin-top: 15px; font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <h2>YouTube Direct Streamer</h2>
-            <input type="text" id="url" placeholder="Paste YouTube Video URL here..." />
-            <br><br>
-            <button onclick="streamVideo()">Play Video</button>
-            <br>
-            <div id="error"></div>
-            <br>
-            <video id="player" controls width="720" style="max-width:100%;"></video>
-            <script>
-                function streamVideo() {
-                    const u = document.getElementById('url').value;
-                    const errDiv = document.getElementById('error');
-                    errDiv.innerText = '';
-                    if(!u) { alert('Please enter a valid YouTube URL'); return; }
-                    const player = document.getElementById('player');
-                    player.src = '/stream?url=' + encodeURIComponent(u);
-                    player.play().catch(err => {
-                        errDiv.innerText = 'Playback failed. Try a different video link.';
-                    });
-                }
-            </script>
-        </body>
-        </html>
-    `);
+  res.json({
+    status: 'ok',
+    endpoints: {
+      youtube: '/search?yt=query&limit=10',
+      spotify: '/search?spo=query&limit=10&type=track',
+      spotify_types: ['track', 'album', 'artist', 'playlist']
+    }
+  });
 });
 
 app.listen(PORT, () => {
-    console.log('Server running on port ' + PORT);
+  console.log(`http on ${PORT}`);
 });
